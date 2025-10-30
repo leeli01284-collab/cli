@@ -204,7 +204,7 @@ func main() {
 All error helpers include comprehensive tests. Run them with:
 
 ```bash
-go test ./pkg/cmdutil/error_helpers_test.go
+go test ./pkg/cmdutil
 ```
 
 ## Migration Guide
