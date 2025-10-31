@@ -111,25 +111,26 @@ func CheckForUpdate(ctx context.Context, client *http.Client, stateFilePath, rep
 }
 
 func getLatestReleaseInfo(ctx context.Context, client *http.Client, repo string) (*ReleaseInfo, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", repo), nil)
+	url := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", repo)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch release info: %w", err)
 	}
 	defer func() {
 		_, _ = io.Copy(io.Discard, res.Body)
 		res.Body.Close()
 	}()
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("unexpected HTTP %d", res.StatusCode)
+		return nil, fmt.Errorf("failed to check for update: unexpected HTTP %d from %s", res.StatusCode, url)
 	}
 	dec := json.NewDecoder(res.Body)
 	var latestRelease ReleaseInfo
 	if err := dec.Decode(&latestRelease); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse release info: %w", err)
 	}
 	return &latestRelease, nil
 }
