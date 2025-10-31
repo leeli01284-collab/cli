@@ -191,7 +191,7 @@ func cmdsForExistingRemote(remote *cliContext.Remote, pr *api.PullRequest, opts 
 		if opts.Force {
 			cmds = append(cmds, []string{"reset", "--hard", fmt.Sprintf("refs/remotes/%s", remoteBranch)})
 		} else {
-			// 尝试快进合并，如果失败会提示用户使用 --force 标志
+			// Attempt fast-forward merge; user will get helpful hint if it fails
 			cmds = append(cmds, []string{"merge", "--ff-only", fmt.Sprintf("refs/remotes/%s", remoteBranch)})
 		}
 	default:
@@ -226,11 +226,11 @@ func cmdsForMissingRemote(pr *api.PullRequest, baseURLOrName, repoHost, defaultB
 		if opts.Force {
 			cmds = append(cmds, []string{"reset", "--hard", "FETCH_HEAD"})
 		} else {
-			// 尝试快进合并，如果失败会提示用户使用 --force 标志
+			// Attempt fast-forward merge; user will get helpful hint if it fails
 			cmds = append(cmds, []string{"merge", "--ff-only", "FETCH_HEAD"})
 		}
 	} else {
-		// 获取并切换到分支，如果失败会提供友好的错误提示
+		// Fetch and checkout branch; helpful error message provided on failure
 		fetchCmd := []string{"fetch", baseURLOrName, fmt.Sprintf("%s:%s", ref, localBranch), "--no-tags"}
 		if opts.Force {
 			fetchCmd = append(fetchCmd, "--force")
@@ -284,9 +284,9 @@ func executeCmds(client *git.Client, credentialPattern git.CredentialPattern, cm
 			return err
 		}
 		if err := cmd.Run(); err != nil {
-			// 提供更友好的错误消息，特别是对于合并失败的情况
+			// Provide helpful error message for merge failures
 			if args[0] == "merge" && len(args) > 1 && args[1] == "--ff-only" {
-				return fmt.Errorf("%w\n\n提示：分支无法快进合并。您有以下选择：\n  1. 使用 --force 标志强制更新: gh pr checkout --force\n  2. 手动解决冲突后合并", err)
+				return fmt.Errorf("%w\n\nHint: Cannot fast-forward merge. You can either:\n  • Use --force to force update: gh pr checkout --force\n  • Manually resolve conflicts and merge", err)
 			}
 			return err
 		}
